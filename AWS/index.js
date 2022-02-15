@@ -1,17 +1,16 @@
 require('dotenv').config();
 const mysql = require('mysql2');
-const fetch = require('node-fetch');
 const { database } = require('./keys');
-const conexion = mysql.createConnection({
-    host: database.host,
-    user: database.user,
-    password: database.password,
-    port: database.port,
-    database: database.database
-});
 
 exports.handler = async function (event) {
     const promise = new Promise(async function() {
+        const conexion = mysql.createConnection({
+            host: database.host,
+            user: database.user,
+            password: database.password,
+            port: database.port,
+            database: database.database
+        });
         const client = await auth.getClient();
         const googleSheet = google.sheets({ version: 'v4', auth: client });
         try {
@@ -65,62 +64,66 @@ exports.handler = async function (event) {
         }
         async function trasladarCashFlow(resultado){
             try {
+                await googleSheet.spreadsheets.values.clear({
+                    auth,
+                    spreadsheetId,
+                    range: `${process.env.ID_HOJA_RANGO}`
+                });
+                var datos = [];
                 for (let i = 0; i < resultado.length; i++) {
-                    var datos = [
-                        [
-                            resultado[i].date,
-                            resultado[i].symbol,
-                            resultado[i].cik,
-                            resultado[i].reportedCurrency,
-                            resultado[i].fillingDate,
-                            resultado[i].acceptedDate,
-                            resultado[i].calendarYear,
-                            resultado[i].period,
-                            resultado[i].netIncome,
-                            resultado[i].depreciationAndAmortization,
-                            resultado[i].deferredIncomeTax,
-                            resultado[i].stockBasedCompensation,
-                            resultado[i].changeInWorkingCapital,
-                            resultado[i].accountsReceivables,
-                            resultado[i].inventory,
-                            resultado[i].accountsPayables,
-                            resultado[i].otherWorkingCapital,
-                            resultado[i].otherNonCashItems,
-                            resultado[i].netCashProvidedByOperatingActivities,
-                            resultado[i].investmentsInPropertyPlantAndEquipment,
-                            resultado[i].acquisitionsNet,
-                            resultado[i].purchasesOfInvestments,
-                            resultado[i].salesMaturitiesOfInvestments,
-                            resultado[i].otherInvestingActivites,
-                            resultado[i].netCashUsedForInvestingActivites,
-                            resultado[i].debtRepayment,
-                            resultado[i].commonStockIssued,
-                            resultado[i].commonStockRepurchased,
-                            resultado[i].dividendsPaid,
-                            resultado[i].otherFinancingActivites,
-                            resultado[i].netCashUsedProvidedByFinancingActivities,
-                            resultado[i].effectOfForexChangesOnCash,
-                            resultado[i].netChangeInCash,
-                            resultado[i].cashAtEndOfPeriod,
-                            resultado[i].cashAtBeginningOfPeriod,
-                            resultado[i].operatingCashFlow,
-                            resultado[i].capitalExpenditure,
-                            resultado[i].freeCashFlow,
-                            resultado[i].link,
-                            resultado[i].finalLink
-                        ]
-                    ]
-                    await googleSheet.spreadsheets.values.append({
-                        auth,
-                        spreadsheetId,
-                        range: `${process.env.ID_HOJA_RANGO}`,
-                        valueInputOption: "USER_ENTERED",
-                        requestBody: {
-                            "range": `${process.env.ID_HOJA_RANGO}`,
-                            "values": datos
-                        }
-                    });
+                    datos.push([
+                        resultado[i].date,
+                        resultado[i].symbol,
+                        resultado[i].cik,
+                        resultado[i].reportedCurrency,
+                        resultado[i].fillingDate,
+                        resultado[i].acceptedDate,
+                        resultado[i].calendarYear,
+                        resultado[i].period,
+                        resultado[i].netIncome,
+                        resultado[i].depreciationAndAmortization,
+                        resultado[i].deferredIncomeTax,
+                        resultado[i].stockBasedCompensation,
+                        resultado[i].changeInWorkingCapital,
+                        resultado[i].accountsReceivables,
+                        resultado[i].inventory,
+                        resultado[i].accountsPayables,
+                        resultado[i].otherWorkingCapital,
+                        resultado[i].otherNonCashItems,
+                        resultado[i].netCashProvidedByOperatingActivities,
+                        resultado[i].investmentsInPropertyPlantAndEquipment,
+                        resultado[i].acquisitionsNet,
+                        resultado[i].purchasesOfInvestments,
+                        resultado[i].salesMaturitiesOfInvestments,
+                        resultado[i].otherInvestingActivites,
+                        resultado[i].netCashUsedForInvestingActivites,
+                        resultado[i].debtRepayment,
+                        resultado[i].commonStockIssued,
+                        resultado[i].commonStockRepurchased,
+                        resultado[i].dividendsPaid,
+                        resultado[i].otherFinancingActivites,
+                        resultado[i].netCashUsedProvidedByFinancingActivities,
+                        resultado[i].effectOfForexChangesOnCash,
+                        resultado[i].netChangeInCash,
+                        resultado[i].cashAtEndOfPeriod,
+                        resultado[i].cashAtBeginningOfPeriod,
+                        resultado[i].operatingCashFlow,
+                        resultado[i].capitalExpenditure,
+                        resultado[i].freeCashFlow,
+                        resultado[i].link,
+                        resultado[i].finalLink
+                    ]);
                 }
+                await googleSheet.spreadsheets.values.append({
+                    auth,
+                    spreadsheetId,
+                    range: `${process.env.ID_HOJA_RANGO}`,
+                    valueInputOption: "USER_ENTERED",
+                    requestBody: {
+                        "range": `${process.env.ID_HOJA_RANGO}`,
+                        "values": datos
+                    }
+                });
                 console.log('Datos agregados correctamente.');
             } catch (error) {
                 console.error(error);
@@ -128,8 +131,7 @@ exports.handler = async function (event) {
             await finalizarEjecucion();
         };
         async function finalizarEjecucion() {
-            conexion.end()
-            res.send("Ejecutado");
+            conexion.end();
         }
     });
     return promise;
