@@ -26,9 +26,9 @@ app.get('/', async (req, res) => {
     const googleSheet = google.sheets({ version: 'v4', auth: client });
     try {
         var sql = `SELECT date,
-        symbol, 
+        symbol,
+        reportedCurrency, 
         cik,
-        reportedCurrency,
         fillingDate,
         acceptedDate,
         calendarYear,
@@ -85,8 +85,8 @@ app.get('/', async (req, res) => {
                 datos.push([
                     resultado[i].date,
                     resultado[i].symbol,
-                    resultado[i].cik,
                     resultado[i].reportedCurrency,
+                    resultado[i].cik,
                     resultado[i].fillingDate,
                     resultado[i].acceptedDate,
                     resultado[i].calendarYear,
