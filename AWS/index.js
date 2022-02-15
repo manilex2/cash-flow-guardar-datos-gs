@@ -1,6 +1,12 @@
 require('dotenv').config();
 const mysql = require('mysql2');
 const { database } = require('./keys');
+const { google } = require('googleapis');
+const auth = new google.auth.GoogleAuth({
+    keyFile: 'credentials.json',
+    scopes: 'https://www.googleapis.com/auth/spreadsheets'
+});
+const spreadsheetId = process.env.SPREADSHEET_ID;
 
 exports.handler = async function (event) {
     const promise = new Promise(async function() {
